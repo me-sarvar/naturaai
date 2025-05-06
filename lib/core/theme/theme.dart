@@ -26,13 +26,17 @@ final ThemeData lightTheme = ThemeData(
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: lightSurface,
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide.none,
+    fillColor: Color(0xFFFFFFFF),
+    contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: lightPrimary.withValues(alpha: 0.3), width: 1.2),
     ),
-    hintStyle: TextStyle(color: lightText.withOpacity(0.6)),
-    labelStyle: const TextStyle(color: lightText),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: lightPrimary, width: 2.0),
+    ),
+    hintStyle: TextStyle(color: lightText..withAlpha((0.6 * 255).toInt()), fontSize: 15),
   ),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(foregroundColor: lightPrimary),
@@ -42,9 +46,10 @@ final ThemeData lightTheme = ThemeData(
       backgroundColor: lightPrimary,
       foregroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 28),
+      textStyle: const TextStyle(fontWeight: FontWeight.bold),
     ),
   ),
   textTheme: const TextTheme(
@@ -66,12 +71,16 @@ final ThemeData darkTheme = ThemeData(
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
     fillColor: darkSurface,
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide.none,
+    contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: darkPrimary.withValues(alpha: 0.3), width: 1.2),
     ),
-    hintStyle: TextStyle(color: darkText.withOpacity(0.6)),
-    labelStyle: const TextStyle(color: darkText),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: darkPrimary, width: 2.0),
+    ),
+    hintStyle: TextStyle(color: darkText.withValues(alpha: 0.6), fontSize: 15),
   ),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(foregroundColor: darkSecondary),
@@ -81,9 +90,10 @@ final ThemeData darkTheme = ThemeData(
       backgroundColor: darkPrimary,
       foregroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 28),
+      textStyle: const TextStyle(fontWeight: FontWeight.bold),
     ),
   ),
   textTheme: const TextTheme(

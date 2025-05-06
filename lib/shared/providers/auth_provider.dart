@@ -1,32 +1,57 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-final authProvider = StateNotifierProvider<AuthController, bool>((ref) {
-  return AuthController();
+final authProvider = StateNotifierProvider<AuthNotifier, bool>((ref) {
+  return AuthNotifier();
 });
 
-class AuthController extends StateNotifier<bool> {
-  AuthController() : super(false) {
-    _checkLoginStatus();
-  }
+class AuthNotifier extends StateNotifier<bool> {
+  AuthNotifier() : super(false);
 
-  Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    state = token != null;
-  }
+  final _auth = FirebaseAuth.instance;
 
-  Future<void> login(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
+  /// Signup with email and password
+  Future<void> signup(String email, String password, String name) async {
+  try {
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // Save additional user data in Firestore
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(credential.user!.uid)
+        .set({
+          'name': name,
+          'email': email,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
     state = true;
+  } catch (e) {
+    rethrow;
+  }
+}
+
+  /// Login with email and password
+  Future<void> login(String email, String password) async {
+    try {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      state = true;
+    } catch (e) {
+      rethrow;
+    }
   }
 
+  /// Logout
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    state = false;
+    try {
+      await _auth.signOut();
+      state = false;
+    } catch (e) {
+      rethrow;
+    }
   }
-
-  bool get isLoggedIn => state;
 }

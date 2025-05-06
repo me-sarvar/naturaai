@@ -14,7 +14,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(const Duration(seconds: 1), () {
       final isLoggedIn = ref.read(authProvider);
       if (isLoggedIn) {
         if (mounted) {
@@ -32,12 +32,6 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: Colors.white,
-      // body: Center(
-      //   child: Text(
-      //     '🌿 Natura AI',
-      //     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-      //   ),
-      // ),
       body: Center(
         child: SizedBox.expand(
           child: Image(
