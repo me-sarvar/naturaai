@@ -83,3 +83,4 @@ web/generated_plugin_registrant.dart
 # 🌍 Localization
 # ---------------------------
 l10n/*.g.dart
+.flutter-plugins-dependencies
