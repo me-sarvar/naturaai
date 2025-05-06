@@ -1,45 +1,85 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
+# ---------------------------
+# 🔧 IDE & Editor Settings
+# ---------------------------
+.idea/
 *.iml
 *.ipr
 *.iws
-.idea/
+*.swp
+.DS_Store
+.atom/
+.vscode/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# ---------------------------
+# 🐍 Python (if used in tooling)
+# ---------------------------
+*.pyc
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
+# ---------------------------
+# ⚙️ Build Artifacts
+# ---------------------------
+/build/
+/ios/Flutter/.last_build_id
+/.dart_tool/
+/.packages
 .pub-cache/
 .pub/
-/build/
 
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
+# Android build outputs
+/android/.gradle/
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/local.properties
+
+# iOS/macOS build outputs
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/App.framework
+/ios/Flutter/Flutter.framework
+/macos/Pods/
+/macos/Flutter/ephemeral/
+/ios/Runner.xcworkspace/
+/ios/Runner.xcodeproj/project.xcworkspace/
+/ios/Runner.xcodeproj/xcuserdata/
+/macos/Runner.xcodeproj/xcuserdata/
+/*.xcuserstate
+*.xcuserdatad
+
+# ---------------------------
+# 🧪 Testing
+# ---------------------------
+/coverage/
+
+# ---------------------------
+# 🗃️ Misc
+# ---------------------------
+*.log
+*.class
+app.*.symbols
+app.*.map.json
+.history
+.build/
+.buildlog/
+migrate_working_dir/
+**/doc/api/
+
+# ---------------------------
+# 🔐 Secrets & Environment
+# ---------------------------
+*.keystore
+*.jks
+google-services.json
+ios/Runner/GoogleService-Info.plist
+.env
+.env.*
+
+# ---------------------------
+# 🌐 Web
+# ---------------------------
+web/generated_plugin_registrant.dart
+
+# ---------------------------
+# 🌍 Localization
+# ---------------------------
+l10n/*.g.dart
