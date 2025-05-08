@@ -1,20 +1,24 @@
 # Security Policy
 
-## Supported Versions
-
-We regularly update and maintain the latest stable release.
-
-| Version | Supported          |
-|---------|--------------------|
-| latest  | ✅                 |
-| older   | ❌                 |
-
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please report it responsibly.
+If you discover a security vulnerability in this project, please report it responsibly.
 
-- Email: 3M1100@duck.com
-- GitHub Issues: Please **do not** open public issues for sensitive vulnerabilities.
-- We aim to respond within 48 hours.
+- **Email:** security@naturaai.dev (replace with your actual email)
+- **GitHub Issues:** [Open a private issue](https://github.com/me-sarvar/naturaai/issues)
 
-Thank you for helping keep this project safe and secure!
+We will investigate the report promptly and take appropriate action.
+
+## Supported Versions
+
+This project is currently under active development and has **not yet had a stable public release**.
+The current pre-release version is supported for contributors and testers.
+
+| Version   | Status        | Notes                           |
+|-----------|---------------|---------------------------------|
+| 0.1.0-dev | ✅ In Progress | Active development version      |
+| < 0.1.0   | ❌ Unsupported | Not considered production-ready |
+
+## Disclosure Policy
+
+We ask you not to publicly disclose vulnerabilities without first contacting us. Responsible disclosure helps us protect users more effectively.
