@@ -1,4 +1,3 @@
-
 # NaturaAI
 
 **NaturaAI** is a relaxing soundscape generator built with Flutter. It allows users to mix natural ambient sounds like rain, fire, birds, and wind. Ideal for focus, sleep, and mindfulness.
