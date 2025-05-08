@@ -74,7 +74,7 @@ jobs:
           if grep -q "flutter.minSdkVersion" "$LOCAL_PROPERTIES"; then
               sed -i 's/flutter.minSdkVersion=.*/flutter.minSdkVersion=23/' "$LOCAL_PROPERTIES"
           else
-              echo "flutter.minSdkVersion=23" >> "$LOCAL_PROPERTIES"
+              echo "flutter.minSdkVersion=21" >> "$LOCAL_PROPERTIES"
           fi
           
           # Add flutter.targetSdkVersion=34
