@@ -1,105 +1,34 @@
-name: Release Build
+name: Analyze APK Size
 
 on:
   push:
-    tags:
-      - 'v*'  # Triggers only when a version tag like v0.1.0 is pushed
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  build:
+  analyze:
+    name: Analyze Flutter APK Size
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Decode google-services.json
-        run: |
-          echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > android/app/google-services.json
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.3'
 
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        
-      - name: Accept Android licenses
-        run: |
-          yes | sdkmanager --licenses || true
-          
-      - name: Install NDK
-        run: |
-          sdkmanager "ndk;27.2.12479018"
-          
-      - name: Install SDK 34
-        run: |
-          sdkmanager "platforms;android-34" "build-tools;34.0.0"
-
       - name: Install dependencies
         run: flutter pub get
-        
-      - name: Update Flutter SDK Configuration
+
+      - name: Build APK with size analysis
+        run: flutter build apk --release --analyze-size
+
+      - name: Print size analysis summary
         run: |
-          # Path to the flutter.gradle file in the Flutter SDK
-          cd "$FLUTTER_HOME"
-          
-          # Create a temporary file with updated SDK values
-          TEMP_FILE=$(mktemp)
-          cat > "$TEMP_FILE" << EOF
-          android {
-              buildToolsVersion '34.0.0'
-              compileSdkVersion 34
-              
-              defaultConfig {
-                  minSdkVersion 23
-                  targetSdkVersion 34
-              }
-          }
-          EOF
-          
-          # Path for local properties file
-          LOCAL_PROPERTIES="android/local.properties"
-          
-          # Ensure the file exists
-          touch "$LOCAL_PROPERTIES"
-          
-          # Add flutter.minSdkVersion=23
-          if grep -q "flutter.minSdkVersion" "$LOCAL_PROPERTIES"; then
-              sed -i 's/flutter.minSdkVersion=.*/flutter.minSdkVersion=23/' "$LOCAL_PROPERTIES"
-          else
-              echo "flutter.minSdkVersion=23" >> "$LOCAL_PROPERTIES"
-          fi
-          
-          # Add flutter.targetSdkVersion=34
-          if grep -q "flutter.targetSdkVersion" "$LOCAL_PROPERTIES"; then
-              sed -i 's/flutter.targetSdkVersion=.*/flutter.targetSdkVersion=34/' "$LOCAL_PROPERTIES"
-          else
-              echo "flutter.targetSdkVersion=34" >> "$LOCAL_PROPERTIES"
-          fi
-          
-          # Add flutter.compileSdkVersion=34
-          if grep -q "flutter.compileSdkVersion" "$LOCAL_PROPERTIES"; then
-              sed -i 's/flutter.compileSdkVersion=.*/flutter.compileSdkVersion=34/' "$LOCAL_PROPERTIES"
-          else 
-              echo "flutter.compileSdkVersion=34" >> "$LOCAL_PROPERTIES"
-          fi
-          
-          echo "Updated local.properties:"
-          cat "$LOCAL_PROPERTIES"
-
-      - name: Build APK
-        run: flutter build apk --release
-
-      - name: Upload Release APK
-        uses: softprops/action-gh-release@v1
-        with:
-          files: build/app/outputs/flutter-apk/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "APK size summary:"
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
+          echo "Size breakdown:"
+          ls -lh build/app/outputs/flutter-apk/*.json || true
