@@ -25,17 +25,33 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y unzip openjdk-17-jdk
-
-          mkdir -p "$HOME/android-sdk/cmdline-tools"
-          cd "$HOME/android-sdk/cmdline-tools"
-          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
-          unzip tools.zip -d tools
-
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/tools/bin:$PATH
-          export PATH=$ANDROID_HOME/platform-tools:$PATH
-
-          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses
+          
+          ANDROID_SDK_ROOT="$HOME/android-sdk"
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV # For compatibility
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          
+          mkdir -p "$ANDROID_SDK_ROOT"
+          
+          CL_TOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+          CL_TOOLS_ZIP="$HOME/tools.zip"
+          wget "$CL_TOOLS_URL" -O "$CL_TOOLS_ZIP"
+          
+          CL_TOOLS_DEST="$ANDROID_SDK_ROOT/cmdline-tools"
+          mkdir -p "$CL_TOOLS_DEST"
+          
+          TEMP_UNZIP_DIR=$(mktemp -d)
+          unzip "$CL_TOOLS_ZIP" -d "$TEMP_UNZIP_DIR"
+          
+          mv "$TEMP_UNZIP_DIR/cmdline-tools" "$CL_TOOLS_DEST/latest"
+          
+          rm -rf "$TEMP_UNZIP_DIR"
+          rm "$CL_TOOLS_ZIP"
+          
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH # Add platform-tools too
+          
+          yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses || true # Use || true to prevent failure on license acceptance
+          
           sdkmanager "ndk;27.2.12479018"
 
       - name: Install dependencies
