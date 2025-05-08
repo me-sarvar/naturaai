@@ -40,6 +40,21 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+        
+      - name: Update minSdkVersion for Firebase Auth
+        run: |
+          # Check if minSdkVersion needs to be updated
+          GRADLE_FILE="android/app/build.gradle"
+          if grep -q "minSdkVersion" "$GRADLE_FILE"; then
+            # Update existing minSdkVersion to 23
+            sed -i 's/minSdkVersion [0-9]*/minSdkVersion 23/' "$GRADLE_FILE"
+          else
+            # Insert minSdkVersion 23 inside defaultConfig block
+            sed -i '/defaultConfig {/a \\        minSdkVersion 23' "$GRADLE_FILE"
+          fi
+          # Show the changes
+          echo "Updated build.gradle:"
+          cat "$GRADLE_FILE"
 
       - name: Build APK
         run: flutter build apk --release
