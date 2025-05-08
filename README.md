@@ -11,7 +11,7 @@
 [![Security Policy](https://img.shields.io/badge/security-policy-green.svg)](https://github.com/me-sarvar/naturaai/security/policy)
 
 ---
-
+![APK Size](https://img.shields.io/endpoint?url=https://me-sarvar.github.io/naturaai/apk-size.json)
 ## Try It
 
 You can download the latest APK from the [Releases page](https://github.com/me-sarvar/naturaai/releases).
