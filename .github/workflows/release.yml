@@ -35,8 +35,8 @@ jobs:
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
           export PATH=$ANDROID_HOME/platform-tools:$PATH
       
-          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses
-          sdkmanager "ndk;27.2.12479018"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.2.12479018"
       - name: Install Android NDK 27
         run: sdkmanager "ndk;27.2.12479018"
       
