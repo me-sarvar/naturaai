@@ -25,7 +25,7 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release
 
-      - name: Generate APK Size Report
-        uses: nikita-skobov/apk-size-action@v1
+      - name: Report APK Size
+        uses: martinroob/apk-size@v1
         with:
-          apk-path: build/app/outputs/flutter-apk/app-release.apk
+            apkPath: build/app/outputs/flutter-apk/app-release.apk
