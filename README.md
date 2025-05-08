@@ -3,9 +3,9 @@
 **NaturaAI** is a relaxing soundscape generator built with Flutter. It allows users to mix natural ambient sounds like rain, fire, birds, and wind. Ideal for focus, sleep, and mindfulness.
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.29.3-blue?logo=flutter)
-![Dart](https://img.shields.io/badge/Dart-3.7-blue?logo=dart)
+![Dart](https://img.shields.io/badge/Dart-3.7.2-blue?logo=dart)
 [![CI](https://github.com/me-sarvar/naturaai/actions/workflows/flutter_ci.yml/badge.svg)](https://github.com/me-sarvar/naturaai/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](.github/CONTRIBUTING.md)
 
 ---
@@ -84,7 +84,7 @@ To report a vulnerability, please see [SECURITY.md](.github/SECURITY.md)
 
 ## License
 
-This project is licensed under the MIT License â see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 
 
