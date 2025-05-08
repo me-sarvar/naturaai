@@ -19,7 +19,7 @@ class HomePage extends ConsumerWidget {
         actions: [
           Row(
             children: [
-              // LanguageSwitcher(),
+              LanguageSwitcher(),
 
               IconButton(
                 tooltip: 'Logout',
