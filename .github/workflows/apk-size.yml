@@ -1,14 +1,12 @@
-name: APK Size Report
+name: Flutter Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*'
 
 jobs:
-  apk-size:
-    name: Generate APK Size Report
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,15 +15,20 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.3'
+          flutter-version: '3.19.6'
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build release APK
+      - name: Build APK
         run: flutter build apk --release
 
-      - name: Report APK Size
-        uses: martinroob/apk-size@v1
+      - name: Show APK size
+        run: du -h build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Release APK
+        uses: softprops/action-gh-release@v1
         with:
-            apkPath: build/app/outputs/flutter-apk/app-release.apk
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
