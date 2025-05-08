@@ -10,7 +10,10 @@ class SoundState {
 
   SoundState({required this.activeSounds, required this.volumes});
 
-  SoundState copyWith({Set<String>? activeSounds, Map<String, double>? volumes}) {
+  SoundState copyWith({
+    Set<String>? activeSounds,
+    Map<String, double>? volumes,
+  }) {
     return SoundState(
       activeSounds: activeSounds ?? this.activeSounds,
       volumes: volumes ?? this.volumes,
@@ -18,13 +21,15 @@ class SoundState {
   }
 }
 
-final soundControllerProvider = StateNotifierProvider<SoundController, SoundState>(
-  (ref) => SoundController(),
-);
+final soundControllerProvider =
+    StateNotifierProvider<SoundController, SoundState>(
+      (ref) => SoundController(),
+    );
 
 class SoundController extends StateNotifier<SoundState> {
   SoundController()
-      : super(SoundState(
+    : super(
+        SoundState(
           activeSounds: {},
           volumes: {
             'rain': 1.0,
@@ -34,7 +39,8 @@ class SoundController extends StateNotifier<SoundState> {
             'river': 1.0,
             'crickets': 1.0,
           },
-        )) {
+        ),
+      ) {
     _loadFromPrefs();
   }
 
@@ -164,70 +170,85 @@ class SoundForestPage extends ConsumerWidget {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
-          children: soundItems.map((item) {
-            final String key = item['key'] as String;
-            final IconData icon = item['icon'] as IconData;
-            final String label = item['label'] as String;
-            final isActive = soundState.activeSounds.contains(key);
-            final volume = soundState.volumes[key] ?? 1.0;
+          children:
+              soundItems.map((item) {
+                final String key = item['key'] as String;
+                final IconData icon = item['icon'] as IconData;
+                final String label = item['label'] as String;
+                final isActive = soundState.activeSounds.contains(key);
+                final volume = soundState.volumes[key] ?? 1.0;
 
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
                       children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: isActive
-                                ? [
-                                    BoxShadow(
-                                      color: Colors.teal.withOpacity(0.6),
-                                      blurRadius: 12,
-                                      spreadRadius: 2,
-                                    ),
-                                  ]
-                                : [],
-                          ),
-                          child: CircleAvatar(
-                            backgroundColor: isActive ? Colors.teal : Colors.grey.shade300,
-                            child: FaIcon(
-                              isActive ? FontAwesomeIcons.volumeHigh : icon,
-                              size: 18,
-                              color: Colors.white,
+                        Row(
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow:
+                                    isActive
+                                        ? [
+                                          BoxShadow(
+                                            color: Colors.teal.withValues(
+                                              alpha: 0.6,
+                                            ),
+                                            blurRadius: 12,
+                                            spreadRadius: 2,
+                                          ),
+                                        ]
+                                        : [],
+                              ),
+                              child: CircleAvatar(
+                                backgroundColor:
+                                    isActive
+                                        ? Colors.teal
+                                        : Colors.grey.shade300,
+                                child: FaIcon(
+                                  isActive ? FontAwesomeIcons.volumeHigh : icon,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                label,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Switch(
+                              value: isActive,
+                              onChanged: (_) => controller.toggleSound(key),
+                            ),
+                          ],
+                        ),
+                        if (isActive)
+                          Slider(
+                            value: volume,
+                            onChanged: (val) => controller.setVolume(key, val),
+                            min: 0,
+                            max: 1,
+                            divisions: 10,
+                            label: "Volume",
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                        ),
-                        Switch(
-                          value: isActive,
-                          onChanged: (_) => controller.toggleSound(key),
-                        ),
                       ],
                     ),
-                    if (isActive)
-                      Slider(
-                        value: volume,
-                        onChanged: (val) => controller.setVolume(key, val),
-                        min: 0,
-                        max: 1,
-                        divisions: 10,
-                        label: "Volume",
-                      )
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
+                  ),
+                );
+              }).toList(),
         ),
       ),
     );
