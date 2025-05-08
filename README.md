@@ -4,7 +4,7 @@
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.19-blue?logo=flutter)
 ![Dart](https://img.shields.io/badge/Dart-3.7-blue?logo=dart)
-[![CI](https://github.com/me-sarvar/naturaai/actions/workflows/dart.yml/badge.svg)](https://github.com/me-sarvar/naturaai/actions)
+[![CI](https://github.com/me-sarvar/naturaai/actions/workflows/flutter_ci.yml/badge.svg)](https://github.com/me-sarvar/naturaai/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](.github/CONTRIBUTING.md)
 
