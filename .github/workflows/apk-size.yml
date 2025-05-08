@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Install Android NDK 27
-        run: sdkmanager "ndk:"27.0.12077973"
+        run: sdkmanager "ndk;27.0.12077973"
       
       - name: Build APK
         run: flutter build apk --release
