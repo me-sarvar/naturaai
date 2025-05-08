@@ -1,34 +1,47 @@
-name: Analyze APK Size
+name: APK Size Analysis
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  analyze:
-    name: Analyze Flutter APK Size
+  analyze-size:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Decode google-services.json
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > android/app/google-services.json
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.3'
 
-      - name: Install dependencies
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android Licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Get dependencies
         run: flutter pub get
 
-      - name: Build APK with size analysis
-        run: flutter build apk --release --analyze-size
+      - name: Build APK and Analyze Size
+        run: flutter build apk --release --analyze-size --target-platform android-arm64
 
-      - name: Print size analysis summary
-        run: |
-          echo "APK size summary:"
-          ls -lh build/app/outputs/flutter-apk/app-release.apk
-          echo "Size breakdown:"
-          ls -lh build/app/outputs/flutter-apk/*.json || true
+      - name: Upload Size Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-size-analysis
+          path: build/**/*.json
