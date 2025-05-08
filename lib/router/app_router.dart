@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:naturaai/features/scenes/forest/view/sound_forest_page.dart';
 import '../features/splash/view/splash_page.dart';
 import '../features/home/view/home_page.dart';
 import '../features/auth/view/login_page.dart';
@@ -11,21 +12,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     debugLogDiagnostics: true,
     routes: [
+      GoRoute(path: '/', builder: (context, state) => const SplashPage()),
+      GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      GoRoute(path: '/signup', builder: (context, state) => const SignupPage()),
       GoRoute(
-        path: '/',
-        builder: (context, state) => const SplashPage(),
-      ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomePage(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
-      GoRoute(
-        path: '/signup',
-        builder: (context, state) => const SignupPage(),
+        path: '/forest',
+        builder: (context, state) => const SoundForestPage(),
       ),
     ],
     redirect: (context, state) {

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:naturaai/l10n/app_localizations.dart';
+import 'package:naturaai/shared/providers/locale_provider.dart';
 import 'core/firebase/firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,9 +10,7 @@ import 'core/theme/theme_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const ProviderScope(child: MainApp()));
 }
 
@@ -24,6 +24,9 @@ class MainApp extends ConsumerWidget {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: ref.watch(localeProvider),
       title: 'Natura AI',
       theme: lightTheme,
       darkTheme: darkTheme,
@@ -32,4 +35,3 @@ class MainApp extends ConsumerWidget {
     );
   }
 }
-

@@ -7,39 +7,47 @@ final authProvider = StateNotifierProvider<AuthNotifier, bool>((ref) {
 });
 
 class AuthNotifier extends StateNotifier<bool> {
-  AuthNotifier() : super(false);
+  AuthNotifier() : super(false) {
+    _listenAuthChanges();
+  }
 
   final _auth = FirebaseAuth.instance;
 
+  void _listenAuthChanges() {
+    _auth.authStateChanges().listen((user) {
+      state = user != null;
+    });
+  }
+
   /// Signup with email and password
   Future<void> signup(String email, String password, String name) async {
-  try {
-    final credential = await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    // Save additional user data in Firestore
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(credential.user!.uid)
-        .set({
-          'name': name,
-          'email': email,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+      // Save additional user data in Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(credential.user!.uid)
+          .set({
+            'name': name,
+            'email': email,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
 
-    state = true;
-  } catch (e) {
-    rethrow;
+      // no need to manually set state; listener handles it
+    } catch (e) {
+      rethrow;
+    }
   }
-}
 
   /// Login with email and password
   Future<void> login(String email, String password) async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
-      state = true;
+      // state handled by listener
     } catch (e) {
       rethrow;
     }
@@ -49,7 +57,7 @@ class AuthNotifier extends StateNotifier<bool> {
   Future<void> logout() async {
     try {
       await _auth.signOut();
-      state = false;
+      // state handled by listener
     } catch (e) {
       rethrow;
     }
