@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Smoke test', () {
-    expect(1 + 1, 2);
+  test('smoke test', () {
+    expect(2 + 2, equals(4));
   });
 }
