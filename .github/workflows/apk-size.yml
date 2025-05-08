@@ -37,24 +37,62 @@ jobs:
       - name: Install NDK
         run: |
           sdkmanager "ndk;27.2.12479018"
+          
+      - name: Install SDK 34
+        run: |
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
       - name: Install dependencies
         run: flutter pub get
         
-      - name: Update minSdkVersion for Firebase Auth
+      - name: Update Flutter SDK Configuration
         run: |
-          # Check if minSdkVersion needs to be updated
-          GRADLE_FILE="android/app/build.gradle"
-          if grep -q "minSdkVersion" "$GRADLE_FILE"; then
-            # Update existing minSdkVersion to 23
-            sed -i 's/minSdkVersion [0-9]*/minSdkVersion 23/' "$GRADLE_FILE"
+          # Path to the flutter.gradle file in the Flutter SDK
+          cd "$FLUTTER_HOME"
+          
+          # Create a temporary file with updated SDK values
+          TEMP_FILE=$(mktemp)
+          cat > "$TEMP_FILE" << EOF
+          android {
+              buildToolsVersion '34.0.0'
+              compileSdkVersion 34
+              
+              defaultConfig {
+                  minSdkVersion 23
+                  targetSdkVersion 34
+              }
+          }
+          EOF
+          
+          # Path for local properties file
+          LOCAL_PROPERTIES="android/local.properties"
+          
+          # Ensure the file exists
+          touch "$LOCAL_PROPERTIES"
+          
+          # Add flutter.minSdkVersion=23
+          if grep -q "flutter.minSdkVersion" "$LOCAL_PROPERTIES"; then
+              sed -i 's/flutter.minSdkVersion=.*/flutter.minSdkVersion=23/' "$LOCAL_PROPERTIES"
           else
-            # Insert minSdkVersion 23 inside defaultConfig block
-            sed -i '/defaultConfig {/a \\        minSdkVersion 23' "$GRADLE_FILE"
+              echo "flutter.minSdkVersion=23" >> "$LOCAL_PROPERTIES"
           fi
-          # Show the changes
-          echo "Updated build.gradle:"
-          cat "$GRADLE_FILE"
+          
+          # Add flutter.targetSdkVersion=34
+          if grep -q "flutter.targetSdkVersion" "$LOCAL_PROPERTIES"; then
+              sed -i 's/flutter.targetSdkVersion=.*/flutter.targetSdkVersion=34/' "$LOCAL_PROPERTIES"
+          else
+              echo "flutter.targetSdkVersion=34" >> "$LOCAL_PROPERTIES"
+          fi
+          
+          # Add flutter.compileSdkVersion=34
+          if grep -q "flutter.compileSdkVersion" "$LOCAL_PROPERTIES"; then
+              sed -i 's/flutter.compileSdkVersion=.*/flutter.compileSdkVersion=34/' "$LOCAL_PROPERTIES"
+          else
+              echo "flutter.compileSdkVersion=34" >> "$LOCAL_PROPERTIES"
+          fi
+          
+          echo "Updated local.properties:"
+          cat "$LOCAL_PROPERTIES"
 
       - name: Build APK
         run: flutter build apk --release
