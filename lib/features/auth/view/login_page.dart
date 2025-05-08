@@ -62,6 +62,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                   // Email Field
                   TextFormField(
+                    key: const Key('emailField'),
                     keyboardType: TextInputType.emailAddress,
                     controller: _emailController,
                     decoration: InputDecoration(
@@ -87,6 +88,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                   // Password Field
                   TextFormField(
+                    key: const Key('passwordField'),
                     keyboardType: TextInputType.visiblePassword,
                     controller: _passwordController,
                     obscureText: _obscurePassword,
