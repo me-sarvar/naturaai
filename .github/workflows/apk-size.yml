@@ -1,0 +1,31 @@
+name: APK Size Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  apk-size:
+    name: Generate APK Size Report
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Generate APK Size Report
+        uses: nikita-skobov/apk-size-action@v1
+        with:
+          apk-path: build/app/outputs/flutter-apk/app-release.apk
