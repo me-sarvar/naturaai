@@ -19,7 +19,11 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-
+      - name: Install Android NDK 27
+        run: sdkmanager "ndk;27.0.12077973"
+      - name: Decode and write google-services.json
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > android/app/google-services.json
       - name: Build APK
         run: flutter build apk --release
 
