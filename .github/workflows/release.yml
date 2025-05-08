@@ -21,6 +21,22 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+      - name: Install Android Command Line Tools and NDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip openjdk-17-jdk
+      
+          mkdir -p "$HOME/android-sdk/cmdline-tools"
+          cd "$HOME/android-sdk/cmdline-tools"
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
+          unzip tools.zip -d latest
+      
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          export PATH=$ANDROID_HOME/platform-tools:$PATH
+      
+          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses
+          sdkmanager "ndk;27.2.12479018"
       - name: Install Android NDK 27
         run: sdkmanager "ndk;27.2.12479018"
       
