@@ -25,8 +25,7 @@ void main() {
 
 
     await tester.tap(find.text('Login'));
-    await tester.pump(); // let async actions complete
+    await tester.pump();
 
-    // Optionally verify UI updates or navigation here
   });
 }

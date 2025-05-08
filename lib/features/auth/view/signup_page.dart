@@ -81,6 +81,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                   // Name Field
                   TextFormField(
+                    key: const Key('nameField'),
                     controller: _nameController,
                     decoration: InputDecoration(
                       hintText: 'Full Name',
@@ -105,6 +106,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                   // Email Field
                   TextFormField(
+                    key: const Key('emailField'),
                     controller: _emailController,
                     decoration: InputDecoration(
                       hintText: 'Email',
@@ -128,6 +130,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                   // Password Field
                   TextFormField(
+                    key: const Key('passwordField'),
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
@@ -160,6 +163,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                   // Confirm Password Field
                   TextFormField(
+                    key: const Key('confirmPasswordField'),
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(

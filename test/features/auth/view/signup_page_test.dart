@@ -36,5 +36,9 @@ void main() {
     await tester.ensureVisible(signUpButton);
     await tester.tap(signUpButton);
     await tester.pump();
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: SignupPage())),
+    );
   });
 }
