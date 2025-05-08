@@ -1,47 +1,34 @@
-name: APK Size Analysis
+name: APK Size Badge
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    tags:
+      - 'v*'
 
 jobs:
-  analyze-size:
+  apk_size:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Decode google-services.json
-        run: |
-          echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > android/app/google-services.json
+      - uses: actions/checkout@v4
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.3'
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
+      - name: Build APK
+        run: flutter build apk --release --target-platform android-arm64 --analyze-size
+
+      - name: Get APK Size and Save JSON
+        run: |
+          APK_SIZE=$(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)
+          mkdir -p badges
+          echo "{\"schemaVersion\":1,\"label\":\"APK Size\",\"message\":\"$APK_SIZE\",\"color\":\"green\"}" > badges/apk-size.json
+
+      - name: Upload badge to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android Licenses
-        run: yes | sdkmanager --licenses || true
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Build APK and Analyze Size
-        run: flutter build apk --release --analyze-size --target-platform android-arm64
-
-      - name: Upload Size Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-size-analysis
-          path: build/**/*.json
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./badges
+          publish_branch: gh-pages
