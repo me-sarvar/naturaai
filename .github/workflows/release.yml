@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'  # Triggers only when a version tag like v0.1.0 is pushed
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -96,6 +98,11 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --release
+        
+      - name: Debug - List built APK files
+        run: |
+          echo "Checking for APK files:"
+          find build -name "*.apk"
 
       - name: Upload Release APK
         uses: softprops/action-gh-release@v1
