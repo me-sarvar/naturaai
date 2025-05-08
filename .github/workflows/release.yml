@@ -100,6 +100,8 @@ jobs:
       - name: Upload Release APK
         uses: softprops/action-gh-release@v1
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: build/app/outputs/apk/release/app-release.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
