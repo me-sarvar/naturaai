@@ -127,6 +127,7 @@ class HomePage extends ConsumerWidget {
               label: const Text('Logout', style: TextStyle(color: Colors.teal)),
               onPressed: () {
                 context.go('/login');
+                //TODO: Add if logout stop all sounds 
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal.withAlpha(10),

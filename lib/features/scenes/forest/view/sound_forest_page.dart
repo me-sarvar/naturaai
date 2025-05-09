@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-// 🧠 STATE
+import 'package:flutter/services.dart';
 
 class SoundState {
   final Set<String> activeSounds;
@@ -25,14 +24,13 @@ class SoundState {
 
 final soundControllerProvider =
     StateNotifierProvider<SoundController, SoundState>(
-  (ref) => SoundController(),
-);
-
-// 🎛️ CONTROLLER
+      (ref) => SoundController(),
+    );
 
 class SoundController extends StateNotifier<SoundState> {
   SoundController()
-      : super(SoundState(
+    : super(
+        SoundState(
           activeSounds: {},
           volumes: {
             'rain': 1.0,
@@ -45,7 +43,8 @@ class SoundController extends StateNotifier<SoundState> {
             'leaves': 1.0,
             'water': 1.0,
           },
-        )) {
+        ),
+      ) {
     _loadFromPrefs();
   }
 
@@ -59,9 +58,9 @@ class SoundController extends StateNotifier<SoundState> {
       'crickets',
       'frogs',
       'leaves',
-      'water'
+      'water',
     ])
-      k: AudioPlayer()
+      k: AudioPlayer(),
   };
 
   final Map<String, String> _soundUrls = {
@@ -84,6 +83,7 @@ class SoundController extends StateNotifier<SoundState> {
       newActiveSounds.remove(key);
       state = state.copyWith(activeSounds: newActiveSounds);
       _saveToPrefs();
+      await _players[key]?.setVolume(0.0);
       await _players[key]?.stop();
     } else {
       newActiveSounds.add(key);
@@ -91,8 +91,37 @@ class SoundController extends StateNotifier<SoundState> {
       _saveToPrefs();
       await _players[key]?.setAsset(_soundUrls[key]!);
       await _players[key]?.setLoopMode(LoopMode.all);
-      await _players[key]?.setVolume(state.volumes[key] ?? 1.0);
+      await _players[key]?.setVolume(10); 
       await _players[key]?.play();
+      _animateVolume(
+        _players[key],
+        state.volumes[key] ?? 10,
+        const Duration(milliseconds: 300),
+      );
+    }
+  }
+
+  void _animateVolume(
+    AudioPlayer? player,
+    double targetVolume,
+    Duration duration,
+  ) async {
+    if (player == null || !player.playing) return;
+
+    const int steps = 30; 
+    final double currentVolume = player.volume;
+    final double volumeChangePerStep = (targetVolume - currentVolume) / steps;
+    final int delayPerStep = duration.inMilliseconds ~/ steps;
+
+    for (int i = 0; i < steps; i++) {
+      if (!player.playing) break; 
+      await Future.delayed(Duration(milliseconds: delayPerStep));
+      final newVolume = currentVolume + (volumeChangePerStep * (i + 1));
+      player.setVolume(newVolume.clamp(0.0, 1.0));
+    }
+
+    if (player.playing) {
+      player.setVolume(targetVolume.clamp(0.0, 1.0));
     }
   }
 
@@ -106,6 +135,7 @@ class SoundController extends StateNotifier<SoundState> {
 
   void stopAll() {
     for (final key in state.activeSounds) {
+      _players[key]?.setVolume(0.0);
       _players[key]?.stop();
     }
     state = state.copyWith(activeSounds: {});
@@ -132,17 +162,28 @@ class SoundController extends StateNotifier<SoundState> {
       }
     }
 
+    final soundsToPlay = <Future>[];
+    final currentlyActive = <String>{};
+
     for (final key in savedKeys) {
       if (_soundUrls.containsKey(key)) {
+        currentlyActive.add(key);
         final volume = newVolumes[key] ?? 1.0;
-        await _players[key]?.setAsset(_soundUrls[key]!);
-        await _players[key]?.setLoopMode(LoopMode.all);
-        await _players[key]?.setVolume(volume);
-        await _players[key]?.play();
+        soundsToPlay.add(() async {
+          try {
+            await _players[key]?.setAsset(_soundUrls[key]!);
+            await _players[key]?.setLoopMode(LoopMode.all);
+            await _players[key]?.setVolume(volume);
+            await _players[key]?.play();
+          } catch (e) {
+            print('Error loading or playing $key: $e');
+            currentlyActive.remove(key);
+          }
+        }());
       }
     }
-
-    state = SoundState(activeSounds: savedKeys.toSet(), volumes: newVolumes);
+    await Future.wait(soundsToPlay);
+    state = SoundState(activeSounds: currentlyActive, volumes: newVolumes);
   }
 
   Future<void> _clearPrefs() async {
@@ -151,6 +192,7 @@ class SoundController extends StateNotifier<SoundState> {
     for (final key in state.volumes.keys) {
       await prefs.remove('volume_$key');
     }
+    print("Preferences cleared.");
   }
 
   @override
@@ -162,33 +204,76 @@ class SoundController extends StateNotifier<SoundState> {
   }
 }
 
-// 🎵 SOUND DATA
-
 class SoundItem {
   final String key;
   final IconData icon;
   final String label;
+  final Color color;
 
   SoundItem({
     required this.key,
     required this.icon,
     required this.label,
+    required this.color,
   });
 }
 
 final List<SoundItem> soundItems = [
-  SoundItem(key: 'rain', icon: FontAwesomeIcons.cloudRain, label: 'Rain'),
-  SoundItem(key: 'fire', icon: FontAwesomeIcons.fire, label: 'Fire'),
-  SoundItem(key: 'birds', icon: FontAwesomeIcons.dove, label: 'Birds'),
-  SoundItem(key: 'wind', icon: FontAwesomeIcons.wind, label: 'Wind'),
-  SoundItem(key: 'river', icon: FontAwesomeIcons.water, label: 'River'),
-  SoundItem(key: 'crickets', icon: FontAwesomeIcons.bug, label: 'Crickets'),
-  SoundItem(key: 'frogs', icon: FontAwesomeIcons.frog, label: 'Frogs'),
-  SoundItem(key: 'leaves', icon: FontAwesomeIcons.leaf, label: 'Leaves'),
-  SoundItem(key: 'water', icon: FontAwesomeIcons.droplet, label: 'Water'),
+  SoundItem(
+    key: 'rain',
+    icon: FontAwesomeIcons.cloudRain,
+    label: 'Rain',
+    color: Colors.blueAccent[100]!,
+  ),
+  SoundItem(
+    key: 'fire',
+    icon: FontAwesomeIcons.fire,
+    label: 'Fire',
+    color: Colors.orange[300]!,
+  ),
+  SoundItem(
+    key: 'birds',
+    icon: FontAwesomeIcons.dove,
+    label: 'Birds',
+    color: Colors.lightGreen[300]!,
+  ),
+  SoundItem(
+    key: 'wind',
+    icon: FontAwesomeIcons.wind,
+    label: 'Wind',
+    color: Colors.cyan[300]!,
+  ),
+  SoundItem(
+    key: 'river',
+    icon: FontAwesomeIcons.water,
+    label: 'River',
+    color: Colors.blue[300]!,
+  ),
+  SoundItem(
+    key: 'crickets',
+    icon: FontAwesomeIcons.bug,
+    label: 'Crickets',
+    color: Colors.brown[300]!,
+  ),
+  SoundItem(
+    key: 'frogs',
+    icon: FontAwesomeIcons.frog,
+    label: 'Frogs',
+    color: Colors.green[400]!,
+  ),
+  SoundItem(
+    key: 'leaves',
+    icon: FontAwesomeIcons.leaf,
+    label: 'Leaves',
+    color: Colors.green[300]!,
+  ),
+  SoundItem(
+    key: 'water',
+    icon: FontAwesomeIcons.droplet,
+    label: 'Water',
+    color: Colors.lightBlue[300]!,
+  ),
 ];
-
-// 📱 UI COMPONENTS
 
 class SoundForestPage extends ConsumerWidget {
   const SoundForestPage({super.key});
@@ -199,127 +284,213 @@ class SoundForestPage extends ConsumerWidget {
     final controller = ref.read(soundControllerProvider.notifier);
     final activeCount = soundState.activeSounds.length;
 
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Background with gradient overlay
           Positioned.fill(
             child: ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black],
-                stops: [0.6, 1.0],
-              ).createShader(bounds),
+              shaderCallback:
+                  (bounds) => LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.3),
+                      Colors.black.withValues(alpha: 0.7),
+                      Colors.black.withValues(alpha: 0.9),
+                    ],
+                    stops: const [0.0, 0.5, 1.0],
+                  ).createShader(bounds),
               blendMode: BlendMode.darken,
               child: Image.asset(
                 'assets/images/forest.png',
                 fit: BoxFit.cover,
+
+                colorBlendMode: BlendMode.overlay,
+                color: Colors.teal.withValues(alpha: 0.2),
               ),
             ),
           ),
-          
-          // Content
+
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // App Bar
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Sound Forest',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w300,
-                          letterSpacing: 1.2,
+                      const Expanded(
+                        child: Text(
+                          'Forest Sound',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.5,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 4.0,
+                                color: Colors.black54,
+                                offset: Offset(1.0, 1.0),
+                              ),
+                            ],
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (activeCount > 0)
-                        IconButton(
-                          icon: const Icon(
-                            Icons.stop_circle_outlined,
-                            color: Colors.white70,
-                            size: 28,
+                        Tooltip(
+                          message: 'Stop All Sounds',
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.stop_circle_outlined,
+                              color: Colors.white70,
+                              size: 30,
+                            ),
+                            onPressed: controller.stopAll,
                           ),
-                          onPressed: controller.stopAll,
-                          tooltip: 'Stop All Sounds',
                         ),
                     ],
                   ),
                 ),
-                
-                // Active Sound Counter
-                if (activeCount > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 26, bottom: 16),
-                    child: Text(
-                      '$activeCount active',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w300,
+
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (
+                    Widget child,
+                    Animation<double> animation,
+                  ) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axisAlignment: -1.0,
+                        child: child,
                       ),
-                    ),
-                  ),
-                
-                // Sound Grid
+                    );
+                  },
+                  child:
+                      activeCount > 0
+                          ? Padding(
+                            key: const ValueKey(
+                              'activeCounter',
+                            ),
+                            padding: const EdgeInsets.only(
+                              left: 28,
+                              bottom: 16,
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.graphic_eq_rounded,
+                                  size: 16,
+                                  color: Colors.white60,
+                                ), // Add a small icon
+                                const SizedBox(width: 6),
+                                Text(
+                                  '$activeCount active mix',
+                                  style: const TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : const SizedBox.shrink(),
+                ),
+
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: GridView.builder(
                       physics: const BouncingScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 0.95,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 0.9,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
                       itemCount: soundItems.length,
                       itemBuilder: (context, index) {
                         final item = soundItems[index];
-                        final isActive = soundState.activeSounds.contains(item.key);
+                        final isActive = soundState.activeSounds.contains(
+                          item.key,
+                        );
                         final volume = soundState.volumes[item.key] ?? 1.0;
-                        
+
                         return SoundCell(
                           item: item,
                           isActive: isActive,
                           volume: volume,
                           onToggle: () => controller.toggleSound(item.key),
-                          onVolumeChanged: (value) => controller.setVolume(item.key, value),
+                          onVolumeChanged:
+                              (value) => controller.setVolume(item.key, value),
                         );
                       },
                     ),
                   ),
                 ),
-                
-                // Bottom Volume Controls
-                Container(
-                  height: 100,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: soundState.activeSounds.length,
-                    itemBuilder: (context, index) {
-                      final key = soundState.activeSounds.elementAt(index);
-                      final item = soundItems.firstWhere((i) => i.key == key);
-                      final volume = soundState.volumes[key] ?? 1.0;
-                      
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 24),
-                        child: VolumeControl(
-                          item: item,
-                          volume: volume,
-                          onVolumeChanged: (value) => controller.setVolume(key, value),
+
+                if (activeCount > 0)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    height: 200,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 2,
+                      vertical: 15,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+
+                      border: Border(
+                        top: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          width: 1,
                         ),
-                      );
-                    },
+                      ),
+                    ),
+                    child: ListView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: soundState.activeSounds.length,
+                      itemBuilder: (context, index) {
+                        final key = soundState.activeSounds.elementAt(index);
+                        final item = soundItems.firstWhere((i) => i.key == key);
+                        final volume = soundState.volumes[key] ?? 1.0;
+
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            right:
+                                index == soundState.activeSounds.length - 1
+                                    ? 0
+                                    : 2,
+                          ),
+                          child: VolumeControl(
+                            item: item,
+                            volume: volume,
+                            onVolumeChanged:
+                                (value) => controller.setVolume(key, value),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
+                if (activeCount == 0) const SizedBox(height: 20),
               ],
             ),
           ),
@@ -349,59 +520,141 @@ class SoundCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onToggle,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          color: isActive 
-              ? Colors.white.withOpacity(0.2) 
-              : Colors.black.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isActive 
-                ? Colors.white.withOpacity(0.7) 
-                : Colors.white.withOpacity(0.1),
-            width: 1.5,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onToggle,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            decoration: BoxDecoration(
+              color:
+                  isActive
+                      ? item.color.withValues(alpha: 0.3)
+                      : Colors.black.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color:
+                    isActive
+                        ? item.color.withValues(alpha: 0.8)
+                        : Colors.white.withValues(alpha: 0.15),
+                width: isActive ? 2.0 : 1.0,
+              ),
+              boxShadow:
+                  isActive
+                      ? [
+                        BoxShadow(
+                          color: item.color.withValues(alpha: 0.3),
+                          blurRadius: 8.0,
+                          spreadRadius: 1.0,
+                        ),
+                      ]
+                      : [],
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: isActive ? 0.1 : 0.02),
+                          Colors.black.withValues(alpha: isActive ? 0.1 : 0.02),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FaIcon(
+                        item.icon,
+                        color:
+                            isActive
+                                ? item.color.brighten(20)
+                                : Colors.white.withValues(
+                                  alpha: 0.6,
+                                ), // Use brighter item color
+                        size: 42,
+                      ),
+                      const SizedBox(height: 16),
+
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          color:
+                              isActive
+                                  ? Colors.white
+                                  : Colors.white.withValues(
+                                    alpha: 0.6,
+                                  ), // White text for active
+                          fontSize: 14,
+                          fontWeight:
+                              isActive ? FontWeight.w500 : FontWeight.w300,
+                          letterSpacing: 0.8,
+                          shadows:
+                              isActive
+                                  ? [
+                                    Shadow(
+                                      blurRadius: 2.0,
+                                      color: Colors.black38,
+                                      offset: Offset(0.5, 0.5),
+                                    ),
+                                  ]
+                                  : [],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                //
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: AnimatedOpacity(
+                    opacity: isActive ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: item.color,
+                        boxShadow: [
+                          BoxShadow(
+                            color: item.color.withValues(alpha: 0.5),
+                            blurRadius: 4.0,
+                            spreadRadius: 1.0,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icon
-            FaIcon(
-              item.icon,
-              color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
-              size: 26,
-            ),
-            const SizedBox(height: 12),
-            
-            // Label
-            Text(
-              item.label,
-              style: TextStyle(
-                color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.w400 : FontWeight.w300,
-                letterSpacing: 0.5,
-              ),
-            ),
-            
-            // Active indicator
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              margin: const EdgeInsets.only(top: 8),
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isActive 
-                    ? Colors.white 
-                    : Colors.transparent,
-              ),
-            ),
-          ],
         ),
       ),
     );
+  }
+}
+
+extension on Color {
+  Color brighten([int percent = 10]) {
+    assert(1 <= percent && percent <= 100);
+    final HSLColor hsl = HSLColor.fromColor(this);
+    final double lightness = (hsl.lightness + (percent / 100.0)).clamp(
+      0.0,
+      1.0,
+    );
+    return hsl.withLightness(lightness).toColor();
   }
 }
 
@@ -419,51 +672,62 @@ class VolumeControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Sound name
-        Text(
-          item.label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-            fontWeight: FontWeight.w300,
-          ),
-        ),
-        const SizedBox(height: 8),
-        
-        // Vertical slider
-        Container(
-          height: 60,
-          width: 28,
-          decoration: BoxDecoration(
-            color: Colors.black26,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: RotatedBox(
-            quarterTurns: 3,
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 4,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-                trackShape: const RoundedRectSliderTrackShape(),
-                activeTrackColor: Colors.white,
-                inactiveTrackColor: Colors.white24,
-                thumbColor: Colors.white,
-                overlayColor: Colors.white24,
+    return SizedBox(
+      width: 48,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Sound icon
+          FaIcon(item.icon, color: item.color.brighten(20), size: 18),
+          const SizedBox(height: 6),
+
+          Expanded(
+            child: Container(
+              width: 28,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Slider(
-                value: volume,
-                min: 0.0,
-                max: 1.0,
-                onChanged: onVolumeChanged,
+              child: RotatedBox(
+                quarterTurns: 3,
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 3, 
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 5,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 14,
+                    ),
+                    trackShape: const RoundedRectSliderTrackShape(),
+                    activeTrackColor: item.color.brighten(10),
+                    inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+                    thumbColor: Colors.white,
+                    overlayColor: item.color.withValues(alpha: 0.3),
+                  ),
+                  child: Slider(
+                    value: volume,
+                    min: 0.0,
+                    max: 10,
+                    onChanged: onVolumeChanged,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            item.label,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 10,
+              fontWeight: FontWeight.w300,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }
