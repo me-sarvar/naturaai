@@ -186,14 +186,14 @@ class SoundController extends StateNotifier<SoundState> {
     state = SoundState(activeSounds: currentlyActive, volumes: newVolumes);
   }
 
-  Future<void> _clearPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('activeSounds');
-    for (final key in state.volumes.keys) {
-      await prefs.remove('volume_$key');
-    }
-    print("Preferences cleared.");
-  }
+  // Future<void> _clearPrefs() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.remove('activeSounds');
+  //   for (final key in state.volumes.keys) {
+  //     await prefs.remove('volume_$key');
+  //   }
+  //   print("Preferences cleared.");
+  // }
 
   @override
   void dispose() {
